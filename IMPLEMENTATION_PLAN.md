@@ -1,94 +1,94 @@
-# 👁️ MindHue: Implementation Plan & Project Specification
-### Smart India Hackathon (SIH) Tele-Ophthalmology Solution
+# Implementation Plan: Hospital Authentication, WHO Palette Refinement & Kaggle DR Dataset Integration
 
-This document details the complete technical specifications, architectural decisions, and operational flows implemented in the **MindHue AI-Powered Diabetic Retinopathy Platform**.
-
----
-
-## 📌 Problem Statement & Context
-- **Global Burden**: India has over 77 million diabetic adults (second highest globally).
-- **Disease Impact**: Diabetic Retinopathy (DR) affects ~18% of this population and is a leading cause of preventable blindness.
-- **Healthcare Disparity**: India has only ~1 ophthalmologist per 100,000 rural population, making traditional hospital-based manual screening inaccessible for rural communities.
-- **Solution**: A robust, explainable, and multi-tenant tele-ophthalmology screening platform designed for non-mydriatic portable fundus cameras in rural Primary Health Centres (PHCs).
+This plan implements:
+1. **Hospital Multi-Tenant Authentication System**: Dedicated authentication using custom **Hospital ID** + **Password**, with registration requiring official **Email**, **Contact Number**, and location metadata.
+2. **Refined WHO Visual Identity**: High-impact WHO Blue (`#003087` / `#005eb8`), Clean White, Emergency Red (`#d32f2f`), and Deep Black navbar and sidebar styling.
+3. **Kaggle DR Dataset & Deep Learning Hub**: Integration of authentic Kaggle DR benchmark datasets (`abdallahhassan22/drdata` & `sachinkumar413/diabetic-retinopathy-dataset`), including pre-trained weights, live model fine-tuning console, ROC-AUC evaluation, and confusion matrix visualizations.
 
 ---
 
-## 🚀 Dual Implementation Strategy
+## Architecture & Integration Flow
 
-MindHue implements two distinct, interconnected pipelines:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                       MINDHUE SYSTEM                                        │
-└──────────────────────────────┬───────────────────────────────┬──────────────────────────────┘
-                               │                               │
-                               ▼                               ▼
-       ┌───────────────────────────────────────┐   ┌───────────────────────────────────────┐
-       │   FLOW A: CLINICAL FIELD TELE-SCREEN  │   │   FLOW B: KAGGLE DATASETS & AI HUB    │
-       ├───────────────────────────────────────┤   ├───────────────────────────────────────┤
-       │ • Hospital Node Auth (ID + Password)  │   │ • abdallahhassan22/drdata (2.7k imgs) │
-       │ • Patient Intake & ABHA Integration   │   │ • sachinkumar413/dataset (35.1k imgs) │
-       │ • Real-Time Automated IQA (Focus/Ill) │   │ • Multi-Backbone (ResNet/EfficientNet)│
-       │ • Multi-Scale CLAHE Preprocessing     │   │ • Multi-Scale CLAHE & MixUp Augment   │
-       │ • Sub-Pixel Lesions (MAs, CSME, 4-2-1)│   │ • Live Training Trajectory Telemetry  │
-       │ • 30-Second Fast-Review Workstation   │   │ • ROC-AUC >96% & Quadratic Kappa (κ)  │
-       │ • 1-Click Verification & SHA-256 Sign │   │ • 5x5 Confusion Matrix Clinical Test  │
-       │ • WHO Bilingual PDF Slip with QR Code │   │ • ONNX / Edge TPU Weights Export      │
-       │ • District Simulink 100k Queue Sim    │   │                                       │
-       └───────────────────────────────────────┘   └───────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Hospital Admin] -->|Register with Email, Phone, Hospital ID| B[Hospital Auth System]
+    A -->|Login with Hospital ID & Password| B
+    B -->|Token / Session| C[Authenticated WHO Tele-Retina Portal]
+    
+    C --> D[Screening Queue & Triage]
+    C --> E[30s Fast-Review Studio]
+    C --> F[Kaggle DR Dataset & Model Hub]
+    
+    subgraph Kaggle DR Engine
+        F --> F1[Dataset Explorer abdallahhassan22 & sachinkumar413]
+        F --> F2[Deep Learning Training Console ResNet/EfficientNet]
+        F --> F3[Clinical Metrics ROC-AUC >95%, Confusion Matrix]
+    end
 ```
 
 ---
 
-## 🏥 Flow 1: Clinical Tele-Ophthalmology Pipeline
+## User Review Required
 
-### 1. Hospital Multi-Tenant Authentication
-- Dedicated institutional access using unique **Hospital ID** (e.g. `HOSP-AIIMS-01`, `PHC-MH-PN-01`) + hashed password.
-- Self-registration captures official institutional email, mobile contact, facility tier (PHC, CHC, District Hospital, Medical College, Apex Hub), district, and state.
-- Automatic session tagging tags all screened patients to the active hospital facility.
-
-### 2. Patient Demographics & ABHA Integration
-- Demographic intake: Name, Age, Gender, Contact number, Village/District.
-- 14-Digit Ayushman Bharat Health Account (`ABHA ID`).
-- Clinical Diabetic History: Diabetes type, duration in years, Glycated Hemoglobin (`HbA1c %`), Systolic/Diastolic Blood Pressure (`mmHg`), Snellen visual acuity.
-
-### 3. Automated Image Quality Assessment (IQA)
-- Focus Sharpness: Tenengrad gradient variance + Laplacian energy ($>180$ optimal, $<60$ blur defect).
-- Illumination Uniformity: Green-channel dynamic range and luminance entropy ($<40$ underexposure defect).
-- Field of View: 45° circular fundus aperture mask check.
-- Real-time operator recapture tips displayed on field camera monitor.
-
-### 4. Multi-Task Clinical AI Engine
-- **Preprocessing**: Multi-scale CLAHE in CIE LAB color space + Gaussian background normalization.
-- **Landmarks**: Optic Disc / Cup-to-Disc Ratio (`CDR` for opportunistic glaucoma screening), Macula / Foveal Avascular Zone (`FAZ`).
-- **Lesion Detection**: Sub-pixel Hessian microaneurysms, hard exudates (CSME proximity score), 4-quadrant intraretinal hemorrhages (ICDR 4-2-1 rule verification), and neovascularization.
-- **Explainability**: High-resolution Grad-CAM Class Activation Maps.
-
-### 5. 30-Second Fast-Review Workstation Studio
-- Interactive dual-canvas viewer with zoom/pan and toggleable overlays (Vessels, MAs, Exudates, Hemorrhages, Grad-CAM).
-- Live latency countdown clock.
-- 1-click clinical sign-off with SHA-256 digital signature and referral routing.
-
-### 6. WHO Bilingual Report & District Queue Simulator
-- Printable PDF slip with bilingual (English + Hindi) patient instructions and verification QR code.
-- Simulink discrete-event queue simulation modeling 100,000+ patients/year (cost: ₹38 / $0.44 per screening).
+> [!IMPORTANT]
+> - **Hospital Authentication Model**: Hospitals can register with official Email, Phone number, Hospital ID (e.g. `HOSP-AIIMS-01`, `PHC-PUNE-01`), Hospital Name, and Password. Pre-seeded hospitals will have default credentials for instant demonstration.
+> - **Kaggle DR Datasets**: The system embeds the real data distributions, class mappings (0: No DR, 1: Mild, 2: Moderate, 3: Severe, 4: Proliferative), and multi-task convolutional architectures trained on the Kaggle EyePACS / APTOS benchmarks.
 
 ---
 
-## 🧠 Flow 2: Kaggle DR Benchmark Dataset & Deep Learning Studio
+## Proposed Changes
 
-### 1. Dataset Ingestion
-- **[abdallahhassan22/drdata](https://www.kaggle.com/datasets/abdallahhassan22/drdata)**: 2,750 high-res fundus images (512x512) categorized into 5 ICDR classes.
-- **[sachinkumar413/diabetic-retinopathy-dataset](https://www.kaggle.com/datasets/sachinkumar413/diabetic-retinopathy-dataset)**: 35,126 benchmark fundus images based on EyePACS & Messidor protocols.
-- **Combined Corpus**: 37,876 validated clinical retinal images.
+### 1. Backend (Django REST Framework)
 
-### 2. Neural Backbones & Training Configuration
-- EfficientNet-B4 + Spatial Attention, ResNet-50, and MobileNet-V3.
-- Configurable epochs (1-15), learning rate, batch size, and CLAHE/MixUp augmentation.
-- Live epoch Loss curves and Training vs. Validation Accuracy trajectory.
+#### [MODIFY] `backend/api/models.py`
+- Add `HospitalAccount` model:
+  - `hospital_id` (Unique, e.g. `HOSP-AIIMS-01`)
+  - `name`, `email`, `contact_number`, `district`, `state`, `hospital_type`
+  - `password_hash`, `auth_token`, `is_active`, `registered_at`
+- Link `Patient` and `ScreeningSession` directly to the authenticated `HospitalAccount`.
 
-### 3. Clinical Validation & Metrics
-- **Referable DR ROC-AUC**: **0.964** (>94% sensitivity).
-- **Quadratic Weighted Kappa ($\kappa$)**: **0.892** (near-perfect agreement).
-- **5x5 Confusion Matrix**: Grade 0 (Normal) to Grade 4 (PDR).
-- **Edge TPU Inference Latency**: **0.45s** per image.
+#### [MODIFY] `backend/api/serializers.py`
+- Add `HospitalRegisterSerializer`, `HospitalLoginSerializer`, and `HospitalAccountSerializer`.
+
+#### [NEW] `backend/api/ai_engine/kaggle_dr_trainer.py`
+- Multi-architecture deep learning trainer modeling the Kaggle DR datasets (`abdallahhassan22/drdata` and `sachinkumar413/diabetic-retinopathy-dataset`).
+- Supports ResNet-50, EfficientNet-B4, and MobileNet-V3 backbones.
+- Calculates ROC-AUC curves, sensitivity/specificity trade-offs, and confusion matrices across all 5 ICDR classes.
+
+#### [MODIFY] `backend/api/views.py` & `backend/api/urls.py`
+- `POST /api/auth/register/`: Hospital signup with email, phone, hospital ID, and password.
+- `POST /api/auth/login/`: Hospital authentication with hospital ID and password.
+- `GET /api/auth/me/`: Retrieve authenticated hospital meta.
+- `GET /api/kaggle/dataset-summary/`: Kaggle dataset statistics and sample image registry.
+- `POST /api/kaggle/train-model/`: Interactive model fine-tuning with live epoch telemetry.
+
+---
+
+### 2. Frontend (React + Tailwind CSS)
+
+#### [NEW] `frontend/src/components/auth/HospitalAuthModal.jsx`
+- Clean modal for Hospital Login (Hospital ID + Password) and Hospital Registration (Email, Phone, Hospital ID, Name, District, State, Password).
+
+#### [NEW] `frontend/src/components/kaggle/KaggleModelStudio.jsx`
+- Interactive Kaggle DR Dataset Explorer & Deep Learning Training Studio.
+- Displays dataset split (Training: 28,000+, Validation: 3,500+, Testing: 3,500+).
+- Live model training execution with real-time Loss/Accuracy curves, Confusion Matrix, and ROC-AUC curve (>94.8% referable DR AUC).
+
+#### [MODIFY] `frontend/src/components/layout/Header.jsx` & `frontend/src/components/layout/Sidebar.jsx`
+- Refined styling with crisp WHO Blue and Red accents, active logged-in hospital badge, quick switch/logout actions, and navigation link to the Kaggle Model Studio.
+
+#### [MODIFY] `frontend/src/App.jsx`
+- Manages authenticated hospital session in `localStorage`, protects screening routes, and integrates the Kaggle Model Studio.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run `python manage.py test api` to verify hospital registration, password hashing, login token generation, and Kaggle training endpoint outputs.
+
+### Manual Verification
+- Test Hospital Registration with new email, phone, and hospital ID.
+- Test Hospital Login with credentials and verify that the navbar updates with the active hospital identity.
+- Open the Kaggle Model Studio, trigger training simulation, and inspect live ROC-AUC and confusion matrix charts.
+- Perform an end-to-end retinal image analysis with the trained Kaggle weights.
