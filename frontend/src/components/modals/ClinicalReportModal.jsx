@@ -27,6 +27,15 @@ export default function ClinicalReportModal({
   const ai = primaryImg?.ai_analysis;
   const validation = ai?.validation;
 
+  const mediaUrl = (url) => {
+    if (!url) return null;
+    try {
+      return new URL(url, window.location.origin).pathname;
+    } catch {
+      return url;
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -185,7 +194,7 @@ export default function ClinicalReportModal({
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center space-y-1">
                   <img
-                    src={primaryImg.raw_image}
+                    src={mediaUrl(primaryImg.raw_image_url || primaryImg.raw_image)}
                     alt="Raw"
                     className="w-full h-32 object-cover rounded-xl border border-slate-300 shadow-sm"
                   />
@@ -194,7 +203,7 @@ export default function ClinicalReportModal({
 
                 <div className="text-center space-y-1">
                   <img
-                    src={ai?.gradcam_heatmap_image || primaryImg.raw_image}
+                    src={mediaUrl(ai?.gradcam_heatmap_image || primaryImg.raw_image_url || primaryImg.raw_image)}
                     alt="Grad-CAM"
                     className="w-full h-32 object-cover rounded-xl border border-slate-300 shadow-sm"
                   />
@@ -203,7 +212,7 @@ export default function ClinicalReportModal({
 
                 <div className="text-center space-y-1">
                   <img
-                    src={ai?.lesions_map_image || primaryImg.raw_image}
+                    src={mediaUrl(ai?.lesions_map_image || primaryImg.raw_image_url || primaryImg.raw_image)}
                     alt="Lesions"
                     className="w-full h-32 object-cover rounded-xl border border-slate-300 shadow-sm"
                   />

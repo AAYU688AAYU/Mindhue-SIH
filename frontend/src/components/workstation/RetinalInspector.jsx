@@ -24,6 +24,15 @@ export default function RetinalInspector({ session }) {
   const ai = currentImage?.ai_analysis;
   const patient = session?.patient || {};
 
+  const mediaUrl = (url) => {
+    if (!url) return null;
+    try {
+      return new URL(url, window.location.origin).pathname;
+    } catch {
+      return url;
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -96,7 +105,7 @@ export default function RetinalInspector({ session }) {
                 
                 {/* Under Image: Raw / Enhanced */}
                 <img
-                  src={currentImage.raw_image}
+                  src={mediaUrl(currentImage.raw_image_url || currentImage.raw_image)}
                   alt="Raw Fundus"
                   className="absolute inset-0 w-full h-full object-cover"
                   draggable={false}
@@ -109,7 +118,7 @@ export default function RetinalInspector({ session }) {
                     style={{ width: `${splitPos}%` }}
                   >
                     <img
-                      src={ai?.gradcam_heatmap_image || currentImage.enhanced_image || currentImage.raw_image}
+                      src={mediaUrl(ai?.gradcam_heatmap_image || currentImage.enhanced_image_url || currentImage.enhanced_image || currentImage.raw_image_url || currentImage.raw_image)}
                       alt="Diagnostic Overlay"
                       className="absolute inset-0 w-[500px] h-[500px] object-cover max-w-none"
                       draggable={false}
@@ -117,7 +126,7 @@ export default function RetinalInspector({ session }) {
                   </div>
                 ) : (
                   <img
-                    src={ai?.gradcam_heatmap_image || currentImage.raw_image}
+                    src={mediaUrl(ai?.gradcam_heatmap_image || currentImage.raw_image_url || currentImage.raw_image)}
                     alt="Diagnostic Overlay"
                     className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-70"
                     draggable={false}

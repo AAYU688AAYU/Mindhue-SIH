@@ -1,4 +1,5 @@
-const API_BASE_URL = '/api';
+const API_URL_ORIGIN = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+const API_BASE_URL = `${API_URL_ORIGIN}/api`;
 
 export const apiClient = {
   // Hospital Authentication

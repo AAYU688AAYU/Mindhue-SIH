@@ -64,6 +64,15 @@ export default function FastReviewStudio({
   const ai = currentImage?.ai_analysis;
   const patient = session?.patient || {};
 
+  const mediaUrl = (url) => {
+    if (!url) return null;
+    try {
+      return new URL(url, window.location.origin).pathname;
+    } catch {
+      return url;
+    }
+  };
+
   useEffect(() => {
     let interval = null;
     if (isTimerRunning) {
@@ -304,7 +313,7 @@ export default function FastReviewStudio({
               >
                 {/* Base Fundus Image (Raw or Enhanced) */}
                 <img
-                  src={activeOverlays.enhanced && currentImage.enhanced_image ? currentImage.enhanced_image : currentImage.raw_image}
+                  src={mediaUrl(activeOverlays.enhanced && (currentImage.enhanced_image_url || currentImage.enhanced_image) ? (currentImage.enhanced_image_url || currentImage.enhanced_image) : (currentImage.raw_image_url || currentImage.raw_image))}
                   alt="Retinal Fundus"
                   className="w-[460px] h-[460px] object-cover rounded-full shadow-2xl ring-4 ring-slate-800/80"
                   draggable={false}
@@ -313,7 +322,7 @@ export default function FastReviewStudio({
                 {/* Layer: Vessel Tree Overlay */}
                 {activeOverlays.vessels && ai?.vessel_map_image && (
                   <img
-                    src={ai.vessel_map_image}
+                    src={mediaUrl(ai.vessel_map_image)}
                     alt="Vessel Map"
                     className="absolute inset-0 w-[460px] h-[460px] object-cover rounded-full pointer-events-none mix-blend-screen opacity-70"
                     draggable={false}
@@ -323,7 +332,7 @@ export default function FastReviewStudio({
                 {/* Layer: Lesions Overlay (Microaneurysms, Exudates, Hemorrhages) */}
                 {(activeOverlays.microaneurysms || activeOverlays.exudates || activeOverlays.hemorrhages) && ai?.lesions_map_image && (
                   <img
-                    src={ai.lesions_map_image}
+                    src={mediaUrl(ai.lesions_map_image)}
                     alt="Lesions Overlay"
                     className="absolute inset-0 w-[460px] h-[460px] object-cover rounded-full pointer-events-none opacity-85"
                     draggable={false}
@@ -333,7 +342,7 @@ export default function FastReviewStudio({
                 {/* Layer: Grad-CAM Explainability Attention Map */}
                 {activeOverlays.gradcam && ai?.gradcam_heatmap_image && (
                   <img
-                    src={ai.gradcam_heatmap_image}
+                    src={mediaUrl(ai.gradcam_heatmap_image)}
                     alt="Grad-CAM Heatmap"
                     className="absolute inset-0 w-[460px] h-[460px] object-cover rounded-full pointer-events-none mix-blend-screen"
                     style={{ opacity: heatmapOpacity }}
