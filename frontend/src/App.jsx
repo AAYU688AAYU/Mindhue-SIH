@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import PatientTriageView from './components/triage/PatientTriageView';
-import FastReviewStudio from './components/workstation/FastReviewStudio';
-import RetinalInspector from './components/workstation/RetinalInspector';
-import DistrictEpidemiologyDashboard from './components/analytics/DistrictEpidemiologyDashboard';
-import SimulinkSimulatorView from './components/simulator/SimulinkSimulatorView';
-import CameraIQALab from './components/iqa/CameraIQALab';
-import ClinicalGuidelinesView from './components/guidelines/ClinicalGuidelinesView';
-import KaggleModelStudio from './components/kaggle/KaggleModelStudio';
 
+// 7 Unified Primary Clinical Modules
+import DashboardView from './components/dashboard/DashboardView';
+import NewAnalysisView from './components/analysis/NewAnalysisView';
+import PatientReportsView from './components/reports/PatientReportsView';
+import AIAgentWorkstationView from './components/agent/AIAgentWorkstationView';
+import FindSpecialistView from './components/specialist/FindSpecialistView';
+import AIAssistantView from './components/assistant/AIAssistantView';
+import AboutView from './components/about/AboutView';
+
+// Modals
 import PatientRegistrationModal from './components/modals/PatientRegistrationModal';
 import ImageUploadModal from './components/modals/ImageUploadModal';
 import ClinicalReportModal from './components/modals/ClinicalReportModal';
@@ -18,7 +20,7 @@ import HospitalAuthModal from './components/auth/HospitalAuthModal';
 import { apiClient } from './api/client';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('triage');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [centers, setCenters] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [screenings, setScreenings] = useState([]);
@@ -121,7 +123,7 @@ export default function App() {
   // Handlers for screening workflow
   const handleSelectSession = (sessionId) => {
     setActiveSessionId(sessionId);
-    setActiveTab('review');
+    setActiveTab('ai-agent');
   };
 
   const handleOpenUploadModal = (sessionId) => {
@@ -154,9 +156,10 @@ export default function App() {
 
       const updatedScreenings = await apiClient.getScreenings();
       setScreenings(updatedScreenings);
-      handleOpenUploadModal(newSession.id);
+      return newSession;
     } catch (err) {
       console.error('Error creating patient:', err);
+      throw err;
     }
   };
 
@@ -172,7 +175,7 @@ export default function App() {
       const detail = await apiClient.getScreeningDetail(uploadSessionId);
       setActiveSessionDetail(detail);
       setActiveSessionId(uploadSessionId);
-      setActiveTab('review');
+      setActiveTab('ai-agent');
     }
   };
 
@@ -221,7 +224,7 @@ export default function App() {
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        {/* Navigation Sidebar */}
+        {/* Navigation Sidebar: 7 Core Modules */}
         <Sidebar
           activeTab={activeTab}
           onSelectTab={setActiveTab}
@@ -232,56 +235,70 @@ export default function App() {
 
         {/* Tab Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto max-h-[calc(100vh-95px)] bg-slate-50">
-          {activeTab === 'triage' && (
-            <PatientTriageView
-              patients={[]}
+          
+          {/* 1. DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              stats={analyticsStats}
+              screenings={screenings}
+              hospital={hospital}
+              onNavigate={setActiveTab}
+              onSelectSession={handleSelectSession}
+              onOpenReport={handleViewReport}
+            />
+          )}
+
+          {/* 2. NEW ANALYSIS */}
+          {activeTab === 'new-analysis' && (
+            <NewAnalysisView
+              centers={centers}
+              selectedCenter={selectedCenter}
+              hospital={hospital}
+              onSubmitNewPatient={handleCreatePatient}
+              onAnalysisComplete={(sessionId) => {
+                if (sessionId) setActiveSessionId(sessionId);
+                setActiveTab('ai-agent');
+              }}
+            />
+          )}
+
+          {/* 3. PATIENT REPORTS */}
+          {activeTab === 'patient-reports' && (
+            <PatientReportsView
               screenings={screenings}
               onSelectSession={handleSelectSession}
-              onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
-              onOpenUploadModal={handleOpenUploadModal}
               onViewReport={handleViewReport}
             />
           )}
 
-          {activeTab === 'review' && (
-            <FastReviewStudio
+          {/* 4. AI ANALYSIS AGENT */}
+          {activeTab === 'ai-agent' && (
+            <AIAgentWorkstationView
               session={activeSessionDetail || screenings[0]}
-              onBack={() => setActiveTab('triage')}
+              onBack={() => setActiveTab('dashboard')}
               onValidate={handleValidateSession}
               onViewReport={handleViewReport}
-            />
-          )}
-
-          {activeTab === 'canvas' && (
-            <RetinalInspector
-              session={activeSessionDetail || screenings[0]}
-            />
-          )}
-
-          {activeTab === 'kaggle' && (
-            <KaggleModelStudio />
-          )}
-
-          {activeTab === 'analytics' && (
-            <DistrictEpidemiologyDashboard
-              stats={analyticsStats}
-              centers={centers}
-            />
-          )}
-
-          {activeTab === 'simulator' && (
-            <SimulinkSimulatorView
               onRunSimulation={apiClient.runSimulation}
             />
           )}
 
-          {activeTab === 'iqa-lab' && (
-            <CameraIQALab />
+          {/* 5. FIND SPECIALIZATION */}
+          {activeTab === 'find-specialist' && (
+            <FindSpecialistView
+              hospital={hospital}
+            />
           )}
 
-          {activeTab === 'guidelines' && (
-            <ClinicalGuidelinesView />
+          {/* 6. AI ASSISTANT */}
+          {activeTab === 'ai-assistant' && (
+            <AIAssistantView />
           )}
+
+          {/* 7. ABOUT */}
+          {activeTab === 'about' && (
+            <AboutView />
+          )}
+
         </main>
 
       </div>

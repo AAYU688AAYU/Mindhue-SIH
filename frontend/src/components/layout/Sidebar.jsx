@@ -1,22 +1,15 @@
 import React from 'react';
 import { 
-  Users, 
-  Eye, 
-  BarChart3, 
-  Sliders, 
-  Camera, 
-  BookOpen, 
-  Zap, 
-  Layers, 
-  FileCheck2,
-  Stethoscope,
-  HeartPulse,
-  Clock,
-  ShieldAlert,
-  Database,
-  ShieldCheck,
-  Building2,
-  Lock
+  LayoutDashboard, 
+  PlusCircle, 
+  FileText, 
+  Sparkles, 
+  Stethoscope, 
+  Bot, 
+  Info,
+  ShieldCheck, 
+  Lock,
+  Building2
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -28,73 +21,65 @@ export default function Sidebar({
 }) {
   const navItems = [
     {
-      id: 'triage',
-      label: 'Screening Triage Queue',
-      icon: Users,
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
       badge: null,
-      desc: 'Patient intake & bilateral fundus uploads'
+      desc: 'Clinical surveillance & live metrics'
     },
     {
-      id: 'review',
-      label: '30-Sec Fast-Review Studio',
-      icon: Zap,
-      badge: pendingReviewCount > 0 ? `${pendingReviewCount} Urgent` : null,
-      badgeColor: 'bg-red-100 text-red-700 border-red-200 font-bold',
-      desc: 'Ophthalmologist 1-click verification'
+      id: 'new-analysis',
+      label: 'New Analysis',
+      icon: PlusCircle,
+      badge: 'Intake',
+      badgeColor: 'bg-blue-100 text-[#005eb8] border-blue-200 font-bold',
+      desc: 'Patient ABHA & retinal capture'
     },
     {
-      id: 'canvas',
-      label: 'Retinal Layer Inspector',
-      icon: Layers,
-      badge: 'Interactive',
-      badgeColor: 'bg-blue-100 text-[#005eb8] border-blue-200',
-      desc: 'Sub-pixel lesions & Grad-CAM overlays'
+      id: 'patient-reports',
+      label: 'Patient Reports',
+      icon: FileText,
+      badge: null,
+      desc: 'Search archives & printable slips'
     },
     {
-      id: 'kaggle',
-      label: 'Kaggle DR Model Hub',
-      icon: Database,
-      badge: '37k Benchmark',
-      badgeColor: 'bg-purple-100 text-purple-700 border-purple-200 font-bold',
-      desc: 'abdallahhassan22 & sachinkumar413 datasets'
+      id: 'ai-agent',
+      label: 'AI Analysis Agent',
+      icon: Sparkles,
+      badge: pendingReviewCount > 0 ? `${pendingReviewCount} Urgent` : '30s Studio',
+      badgeColor: pendingReviewCount > 0 ? 'bg-red-100 text-red-700 border-red-300 font-bold' : 'bg-purple-100 text-purple-700 border-purple-200',
+      desc: 'Fast review, inspector & Kaggle hub'
     },
     {
-      id: 'analytics',
-      label: 'WHO District Epidemiology',
-      icon: BarChart3,
-      badge: 'Live Data',
+      id: 'find-specialist',
+      label: 'Find Specialization',
+      icon: Stethoscope,
+      badge: 'Tele-Network',
       badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      desc: 'Prevalence heatmaps & quality audit'
+      desc: 'Vitreoretinal doctors & tele-referral'
     },
     {
-      id: 'simulator',
-      label: 'District Simulink Simulator',
-      icon: Sliders,
-      badge: '100k Model',
-      badgeColor: 'bg-slate-100 text-slate-800 border-slate-300 font-mono',
-      desc: 'Bandwidth & tele-review capacity model'
+      id: 'ai-assistant',
+      label: 'AI Assistant',
+      icon: Bot,
+      badge: 'Co-Pilot',
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+      desc: 'Clinical Q&A, CSME & 4-2-1 rule'
     },
     {
-      id: 'iqa-lab',
-      label: 'Camera IQA Diagnostic Lab',
-      icon: Camera,
-      badge: null,
-      desc: 'Focus & illumination test bench'
-    },
-    {
-      id: 'guidelines',
-      label: 'ICDR & WHO Protocols',
-      icon: BookOpen,
-      badge: 'Reference',
+      id: 'about',
+      label: 'About',
+      icon: Info,
+      badge: 'WHO / SIH',
       badgeColor: 'bg-slate-100 text-slate-700 border-slate-200',
-      desc: 'Clinical criteria & referral matrix'
+      desc: 'Project mission & standards'
     }
   ];
 
   return (
     <aside className="w-full lg:w-72 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shrink-0 shadow-sm">
       <div className="space-y-1">
-        <div className="px-3 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+        <div className="px-3 py-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center justify-between">
           <span>Clinical Modules</span>
           <span className="text-[10px] font-bold text-[#005eb8] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
             WHO v2.6
@@ -146,7 +131,7 @@ export default function Sidebar({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1.5 text-[#005eb8] font-bold">
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4 shrink-0" />
                 <span className="truncate">{hospital.name}</span>
               </div>
             </div>
