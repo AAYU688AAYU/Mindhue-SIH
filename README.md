@@ -175,8 +175,6 @@ Open **`http://localhost:5173`** in your browser to access the complete workstat
 
 ## 🌐 Deployment & Docker Quick Reference
 
-Detailed instructions are available in [DEPLOYMENT.md](file:///Users/gulshankumar/Desktop/intership/mindhue/DEPLOYMENT.md).
-
 ### 🐳 Run Multi-Container Stack with Docker Compose:
 ```bash
 docker compose up --build -d
