@@ -10,9 +10,7 @@ from .views import (
     seed_benchmark_dataset,
     register_hospital,
     login_hospital,
-    get_hospital_me,
-    get_kaggle_summary,
-    train_kaggle_model_api
+    get_hospital_me
 )
 
 router = DefaultRouter()
@@ -28,10 +26,6 @@ urlpatterns = [
     path('auth/register/', register_hospital, name='hospital-register'),
     path('auth/login/', login_hospital, name='hospital-login'),
     path('auth/me/', get_hospital_me, name='hospital-me'),
-    
-    # Kaggle DR Benchmark Datasets & Deep Learning Engine
-    path('kaggle/summary/', get_kaggle_summary, name='kaggle-summary'),
-    path('kaggle/train/', train_kaggle_model_api, name='kaggle-train'),
     
     # Analytics & Tele-Simulation
     path('analytics/overview/', get_analytics_overview, name='analytics-overview'),

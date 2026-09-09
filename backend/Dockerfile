@@ -39,7 +39,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/api/kaggle/summary/ || exit 1
+  CMD curl -f http://localhost:8000/api/analytics/overview/ || exit 1
 
 # Start gunicorn server
 CMD ["sh", "-c", "python manage.py migrate --no-input && gunicorn backend.wsgi:application --bind 0.0.0.0:${PORT} --workers 1 --threads 2 --timeout 120"]

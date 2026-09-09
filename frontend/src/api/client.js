@@ -35,23 +35,6 @@ export const apiClient = {
     return await res.json();
   },
 
-  // Kaggle DR Benchmark Datasets & Model Hub
-  async getKaggleSummary() {
-    const res = await fetch(`${API_BASE_URL}/kaggle/summary/`);
-    if (!res.ok) throw new Error('Failed to fetch Kaggle datasets');
-    return await res.json();
-  },
-
-  async trainKaggleModel(params) {
-    const res = await fetch(`${API_BASE_URL}/kaggle/train/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    });
-    if (!res.ok) throw new Error('Failed to run model training');
-    return await res.json();
-  },
-
   // District Centers
   async getCenters() {
     const res = await fetch(`${API_BASE_URL}/centers/`);

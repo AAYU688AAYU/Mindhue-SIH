@@ -11,3 +11,4 @@ opencv-python-headless>=4.8.0
 scipy>=1.11.0
 scikit-image>=0.21.0
 requests>=2.31.0
+minio>=7.2.0

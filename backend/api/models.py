@@ -220,6 +220,12 @@ class AIAnalysis(models.Model):
     gradcam_heatmap_image = models.ImageField(upload_to='fundus/gradcam/%Y/%m/%d/', blank=True, null=True)
     vessel_map_image = models.ImageField(upload_to='fundus/vessels/%Y/%m/%d/', blank=True, null=True)
     lesions_map_image = models.ImageField(upload_to='fundus/lesions/%Y/%m/%d/', blank=True, null=True)
+
+    # MinIO Object Storage Reference (Disorder-partitioned storage)
+    minio_raw_path = models.CharField(max_length=500, blank=True, null=True, help_text="MinIO URI for raw fundus image")
+    minio_enhanced_path = models.CharField(max_length=500, blank=True, null=True, help_text="MinIO URI for enhanced image")
+    minio_gradcam_path = models.CharField(max_length=500, blank=True, null=True, help_text="MinIO URI for Grad-CAM overlay")
+    minio_disorder_folder = models.CharField(max_length=200, blank=True, null=True, help_text="MinIO disorder phase folder")
     
     # Clinical Explanation Summary
     clinical_explanation = models.TextField(default="No microaneurysms, hemorrhages or exudates detected. Retinal vasculature healthy.")

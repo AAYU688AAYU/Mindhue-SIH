@@ -92,12 +92,16 @@ def run_retinal_pipeline(retinal_image_model):
     """
     from ..models import AIAnalysis
 
+    raw_bytes = None
     try:
         raw_path = retinal_image_model.raw_image.path
+        with open(raw_path, 'rb') as f:
+            raw_bytes = f.read()
         results = analyze_retinal_image(raw_path)
     except Exception:
         retinal_image_model.raw_image.open('rb')
-        pil_img = Image.open(retinal_image_model.raw_image.file).convert('RGB')
+        raw_bytes = retinal_image_model.raw_image.read()
+        pil_img = Image.open(io.BytesIO(raw_bytes)).convert('RGB')
         results = analyze_retinal_image(np.array(pil_img))
 
     # Update RetinalImage quality metrics
@@ -151,6 +155,29 @@ def run_retinal_pipeline(retinal_image_model):
 
     lesion_file = np_to_content_file(l['overlay_image'], format='JPEG')
     ai_obj.lesions_map_image.save(f"lesion_{retinal_image_model.id}.jpg", lesion_file, save=False)
+
+    # Post-detection: Store into MinIO partitioned by diagnosed disorder level / phase
+    try:
+        from .minio_client import upload_diagnosed_fundus_to_minio
+
+        minio_paths = upload_diagnosed_fundus_to_minio(
+            raw_img_bytes=raw_bytes,
+            enhanced_np=results['enhanced_image_np'],
+            gradcam_np=g['gradcam_image'],
+            icdr_grade=c['icdr_grade'],
+            session_code=retinal_image_model.session.session_code,
+            eye=retinal_image_model.eye,
+            image_id=retinal_image_model.id,
+            vessel_np=v.get('overlay'),
+            lesion_np=l.get('overlay_image')
+        )
+        ai_obj.minio_raw_path = minio_paths.get('raw_path')
+        ai_obj.minio_enhanced_path = minio_paths.get('enhanced_path')
+        ai_obj.minio_gradcam_path = minio_paths.get('gradcam_path')
+        ai_obj.minio_disorder_folder = minio_paths.get('disorder_folder')
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("MinIO post-detection auto-sort skipped or failed: %s", e)
 
     ai_obj.save()
 

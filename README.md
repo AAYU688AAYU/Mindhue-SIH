@@ -60,21 +60,24 @@ MindHue is architected with **two interconnected implementation pipelines**:
 
 ---
 
-### 🔹 Flow B: Kaggle DR Benchmark Dataset & Deep Learning Studio
+### 🔹 Flow B: MinIO Object Storage & Deep Learning Training Hub
 
-1. **Authentic Kaggle Dataset Ingestion**:
-   - **[abdallahhassan22/drdata](https://www.kaggle.com/datasets/abdallahhassan22/drdata)**: 2,750 high-resolution clinical retinal images categorized across 5 ICDR classes.
-   - **[sachinkumar413/diabetic-retinopathy-dataset](https://www.kaggle.com/datasets/sachinkumar413/diabetic-retinopathy-dataset)**: 35,126 benchmark retinal images (EyePACS / Messidor protocols).
-   - Total merged benchmark database: **37,876 validated retinal images**.
-2. **Deep Learning Training & Fine-Tuning Console**:
-   - **Backbone Architectures**: EfficientNet-B4 + Retinal Spatial Attention, ResNet-50, and MobileNet-V3.
-   - **Hyperparameters**: Configurable epochs (1-15), learning rate, batch size, multi-scale CLAHE, and MixUp augmentation.
-   - **Real-Time Convergence Telemetry**: Live epoch Loss curves and Training vs. Validation Accuracy trajectory.
-3. **Clinical Validation & Model Evaluation Suite**:
-   - **Referable DR ROC-AUC**: **0.964** (>94% sensitivity for mass triage).
-   - **Quadratic Weighted Kappa ($\kappa$)**: **0.892** (near-perfect agreement).
-   - **5x5 Confusion Matrix**: Granular classification across Grade 0 (Normal), Grade 1 (Mild), Grade 2 (Moderate), Grade 3 (Severe), and Grade 4 (PDR).
-   - **Inference Latency**: **0.45s** on Edge TPU / ONNX Runtime.
+1. **Disorder-Partitioned Automated Storage**:
+   - Screened fundus images (raw, CLAHE-enhanced, Grad-CAM heatmap, vascular tree, and lesion overlays) are automatically uploaded to MinIO partitioned by diagnosed ICDR disorder level:
+     - `diagnosed/grade_0_normal/`
+     - `diagnosed/grade_1_mild_npdr/`
+     - `diagnosed/grade_2_moderate_npdr/`
+     - `diagnosed/grade_3_severe_npdr/`
+     - `diagnosed/grade_4_pdr/`
+2. **Direct MinIO Dataset Streaming & Training (`MinIORetinalDataset`)**:
+   - PyTorch dataset loader streams training batches directly from MinIO into memory without exhausting local disk.
+   - Run training via CLI:
+     ```bash
+     python manage.py train_from_minio --prefix training_data/ --epochs 10 --backbone resnet50
+     python manage.py train_from_minio --use-diagnosed --epochs 5
+     ```
+3. **Model Checkpoint Management**:
+   - Trained model weights (`.pth`) are automatically saved locally and archived in MinIO under `models/mindhue_retinal_weights.pth`.
 
 ---
 
@@ -167,4 +170,22 @@ Open **`http://localhost:5173`** in your browser to access the complete workstat
 - **Explainability**: Heatmap gradient attribution eliminates "black box" concerns for clinicians.
 - **Field Robustness**: Automated IQA filters out blurry / poorly illuminated captures before transmission.
 - **Frugal Tele-Medicine**: Sub-30-second review studio & discrete event queue modeling tailored for low-bandwidth rural healthcare.
->>>>>>> d7f12f2 (feat: complete MindHue AI-powered diabetic retinopathy screening platform with Kaggle DR models and hospital auth)
+
+---
+
+## 🌐 Deployment & Docker Quick Reference
+
+Detailed instructions are available in [DEPLOYMENT.md](file:///Users/gulshankumar/Desktop/intership/mindhue/DEPLOYMENT.md).
+
+### 🐳 Run Multi-Container Stack with Docker Compose:
+```bash
+docker compose up --build -d
+```
+- **Frontend**: `http://localhost:5173`
+- **Backend API**: `http://localhost:8000/api/`
+- **PostgreSQL**: Port `5432` (`mindhue_db`)
+
+### ☁️ Cloud Deployments:
+- **Frontend on Vercel**: Connect repo, set root directory to `frontend`, framework `Vite`, add env `VITE_API_URL`.
+- **Backend on Render**: Connect repo via Blueprint `render.yaml` or Web Service with `./build.sh` and Gunicorn.
+- **CI/CD Pipeline**: Automated GitHub Actions `.github/workflows/ci-cd.yml` tests backend, builds frontend, validates Docker images, and triggers deployment hooks.

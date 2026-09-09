@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import FastReviewStudio from '../workstation/FastReviewStudio';
 import RetinalInspector from '../workstation/RetinalInspector';
-import KaggleModelStudio from '../kaggle/KaggleModelStudio';
 import SimulinkSimulatorView from '../simulator/SimulinkSimulatorView';
 
 export default function AIAgentWorkstationView({
@@ -22,7 +21,7 @@ export default function AIAgentWorkstationView({
   onViewReport,
   onRunSimulation
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('fast-review'); // 'fast-review' | 'inspector' | 'kaggle-trainer' | 'district-sim'
+  const [activeSubTab, setActiveSubTab] = useState('fast-review'); // 'fast-review' | 'inspector' | 'district-sim'
 
   return (
     <div className="space-y-5">
@@ -38,7 +37,7 @@ export default function AIAgentWorkstationView({
               MindHue AI Analysis Agent Workstation
             </h2>
             <p className="text-[11px] text-slate-500">
-              Multi-task deep learning intelligence suite: Fast Review, Sub-Pixel Inspector, and Kaggle Training
+              Multi-task deep learning intelligence suite: Fast Review, Sub-Pixel Inspector, and District Simulation
             </p>
           </div>
         </div>
@@ -70,18 +69,6 @@ export default function AIAgentWorkstationView({
           </button>
 
           <button
-            onClick={() => setActiveSubTab('kaggle-trainer')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeSubTab === 'kaggle-trainer'
-                ? 'bg-[#005eb8] text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>Kaggle DR Model Hub</span>
-          </button>
-
-          <button
             onClick={() => setActiveSubTab('district-sim')}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeSubTab === 'district-sim'
@@ -110,10 +97,6 @@ export default function AIAgentWorkstationView({
           <RetinalInspector
             session={session}
           />
-        )}
-
-        {activeSubTab === 'kaggle-trainer' && (
-          <KaggleModelStudio />
         )}
 
         {activeSubTab === 'district-sim' && (

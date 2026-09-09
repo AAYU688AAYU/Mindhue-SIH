@@ -369,39 +369,6 @@ def get_hospital_me(request):
         return Response({'authenticated': False, 'message': 'Invalid hospital token.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@api_view(['GET'])
-def get_kaggle_summary(request):
-    """Returns Kaggle Diabetic Retinopathy dataset statistics (abdallahhassan22 & sachinkumar413)."""
-    from .ai_engine.kaggle_dr_trainer import get_kaggle_dataset_summary
-    summary = get_kaggle_dataset_summary()
-    return Response(summary)
-
-
-@api_view(['POST'])
-def train_kaggle_model_api(request):
-    """Triggers deep learning training run on the Kaggle DR datasets with live loss & accuracy curves."""
-    from .ai_engine.kaggle_dr_trainer import train_kaggle_model
-    data = request.data or {}
-    backbone = data.get('backbone', 'EfficientNet-B4')
-    dataset_key = data.get('dataset', 'sachinkumar413_diabetic_retinopathy')
-    epochs = int(data.get('epochs', 5))
-    lr = float(data.get('learning_rate', 0.0003))
-    batch_size = int(data.get('batch_size', 32))
-    use_clahe = bool(data.get('use_clahe', True))
-    use_mixup = bool(data.get('use_mixup', True))
-
-    results = train_kaggle_model(
-        backbone=backbone,
-        dataset_key=dataset_key,
-        epochs=epochs,
-        learning_rate=lr,
-        batch_size=batch_size,
-        use_clahe=use_clahe,
-        use_mixup=use_mixup
-    )
-    return Response(results)
-
-
 @api_view(['POST'])
 def seed_benchmark_dataset(request):
     """Populates medical benchmark clinical cases representing all 5 ICDR levels and quality defects."""
