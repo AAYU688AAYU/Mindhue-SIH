@@ -371,9 +371,15 @@ def get_hospital_me(request):
 
 @api_view(['POST'])
 def seed_benchmark_dataset(request):
-    """Populates medical benchmark clinical cases representing all 5 ICDR levels and quality defects."""
-    from .seed_helper import seed_clinical_cases
-    count = seed_clinical_cases()
-    return Response({'status': 'success', 'message': f'Seeded {count} realistic clinical benchmark cases.'})
+    """Populates medical benchmark clinical cases representing all 5 ICDR levels using real MinIO images."""
+    from .seed_helper import seed_real_minio_cases, seed_clinical_cases
+    try:
+        count = seed_real_minio_cases(limit_per_class=4)
+        msg = f'Successfully loaded {count} real clinical retinal fundus cases from MinIO into the dashboard.'
+    except Exception as e:
+        count = seed_clinical_cases()
+        msg = f'Loaded {count} benchmark cases (fallback): {e}'
+    return Response({'status': 'success', 'message': msg, 'cases_count': count})
+
 
 

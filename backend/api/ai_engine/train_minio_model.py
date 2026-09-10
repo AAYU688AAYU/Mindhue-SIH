@@ -26,8 +26,16 @@ def build_backbone(model_name="resnet50", num_classes=5, pretrained=True):
     import torch.nn as nn
     from torchvision import models
 
-    model_name = model_name.lower()
-    if "efficientnet" in model_name:
+    model_name = model_name.lower().replace("-", "_")
+    if "b0" in model_name or model_name == "efficientnet":
+        weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
+        model = models.efficientnet_b0(weights=weights)
+        in_features = model.classifier[1].in_features
+        model.classifier = nn.Sequential(
+            nn.Dropout(p=0.3, inplace=True),
+            nn.Linear(in_features, num_classes)
+        )
+    elif "efficientnet_b4" in model_name or "b4" in model_name:
         weights = models.EfficientNet_B4_Weights.DEFAULT if pretrained else None
         model = models.efficientnet_b4(weights=weights)
         in_features = model.classifier[1].in_features
@@ -52,7 +60,7 @@ def build_backbone(model_name="resnet50", num_classes=5, pretrained=True):
     return model
 
 
-def get_transforms():
+def get_transforms(image_size=(224, 224)):
     """Returns training and validation transforms tailored for retinal fundus images."""
     if not TORCH_AVAILABLE:
         return None, None
@@ -60,7 +68,7 @@ def get_transforms():
     import torchvision.transforms as T
 
     train_transform = T.Compose([
-        T.Resize((512, 512)),
+        T.Resize(image_size),
         T.RandomHorizontalFlip(p=0.5),
         T.RandomVerticalFlip(p=0.5),
         T.RandomRotation(degrees=20),
@@ -70,7 +78,7 @@ def get_transforms():
     ])
 
     val_transform = T.Compose([
-        T.Resize((512, 512)),
+        T.Resize(image_size),
         T.ToTensor(),
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -79,11 +87,12 @@ def get_transforms():
 
 
 def train_from_minio(
-    prefix="training_data/",
+    bucket=None,
+    prefix="archive/",
     epochs=10,
     batch_size=16,
     learning_rate=1e-4,
-    backbone="resnet50",
+    backbone="efficientnet_b0",
     val_split=0.15,
     save_to_minio=True,
     output_filename="mindhue_retinal_weights.pth"
@@ -104,13 +113,14 @@ def train_from_minio(
     print(f"\n========================================================")
     print(f" MindHue MinIO ML Training Engine")
     print(f" Device: {device} | Backbone: {backbone} | Epochs: {epochs}")
-    print(f" Source Prefix: {prefix}")
+    print(f" Bucket: {bucket or 'mindhue'} | Source Prefix: {prefix}")
     print(f"========================================================\n")
 
-    train_transform, val_transform = get_transforms()
+    img_size = (224, 224) if ("b0" in backbone.lower() or "mobilenet" in backbone.lower()) else (512, 512)
+    train_transform, val_transform = get_transforms(image_size=img_size)
 
     # 1. Load dataset from MinIO
-    full_dataset = MinIORetinalDataset(prefix=prefix, transform=train_transform)
+    full_dataset = MinIORetinalDataset(prefix=prefix, bucket=bucket, transform=train_transform)
     total_images = len(full_dataset)
 
     if total_images == 0:
@@ -238,15 +248,17 @@ def train_from_minio(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train MindHue Retinal Model from MinIO")
-    parser.add_argument("--prefix", type=str, default="training_data/", help="MinIO object prefix")
+    parser.add_argument("--bucket", type=str, default=None, help="MinIO bucket name (default: mindhue)")
+    parser.add_argument("--prefix", type=str, default="archive/", help="MinIO object prefix (default: 'archive/')")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=16, help="Batch size")
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
-    parser.add_argument("--backbone", type=str, default="resnet50", help="Backbone: resnet50, efficientnet, mobilenet")
+    parser.add_argument("--backbone", type=str, default="efficientnet_b0", help="Backbone: efficientnet_b0, resnet50, mobilenet")
     parser.add_argument("--save-minio", action="store_true", default=True, help="Save trained model back to MinIO")
 
     args = parser.parse_args()
     train_from_minio(
+        bucket=args.bucket,
         prefix=args.prefix,
         epochs=args.epochs,
         batch_size=args.batch_size,
@@ -254,3 +266,4 @@ if __name__ == "__main__":
         backbone=args.backbone,
         save_to_minio=args.save_minio
     )
+

@@ -37,30 +37,45 @@ class MinIORetinalDataset(Dataset):
     """
 
     CLASS_KEYWORD_MAP = {
-        'grade_0': 0, 'normal': 0, 'no_dr': 0,
-        'grade_1': 1, 'mild': 1,
-        'grade_2': 2, 'moderate': 2, 'mod_npdr': 2,
-        'grade_3': 3, 'severe': 3, 'sev_npdr': 3,
-        'grade_4': 4, 'pdr': 4, 'proliferative': 4,
+        'grade_0': 0, 'normal': 0, 'no_dr': 0, 'healthy': 0,
+        'grade_1': 1, 'mild': 1, 'mild dr': 1,
+        'grade_2': 2, 'moderate': 2, 'mod_npdr': 2, 'moderate dr': 2,
+        'grade_3': 3, 'severe': 3, 'sev_npdr': 3, 'severe dr': 3,
+        'grade_4': 4, 'pdr': 4, 'proliferative': 4, 'proliferate': 4, 'proliferate dr': 4,
     }
 
     CLASS_NAMES = [
-        "Grade 0: Normal / No Apparent Retinopathy",
+        "Grade 0: Normal / Healthy",
         "Grade 1: Mild Non-Proliferative DR",
         "Grade 2: Moderate Non-Proliferative DR",
         "Grade 3: Severe Non-Proliferative DR",
         "Grade 4: Proliferative Diabetic Retinopathy",
     ]
 
-    def __init__(self, prefix="training_data/", bucket=None, transform=None, cache_memory=True):
+    def __init__(self, prefix="archive/", bucket=None, transform=None, cache_memory=True):
         self.cfg = get_minio_config()
-        self.bucket = bucket or self.cfg["bucket_name"]
+        self.client = get_minio_client()
+        
+        # Determine active bucket: explicit > 'mindhue' (if exists) > configured bucket
+        if bucket:
+            self.bucket = bucket
+        else:
+            default_bucket = self.cfg.get("bucket_name", "mindhue")
+            try:
+                if self.client.bucket_exists("mindhue"):
+                    self.bucket = "mindhue"
+                elif self.client.bucket_exists(default_bucket):
+                    self.bucket = default_bucket
+                else:
+                    self.bucket = default_bucket
+            except Exception:
+                self.bucket = default_bucket
+
         self.prefix = prefix
         self.transform = transform
         self.cache_memory = cache_memory
         self._memory_cache = {}
 
-        self.client = get_minio_client()
         self.samples = []  # List of tuples: (object_name, class_idx)
         self._scan_minio_bucket()
 
@@ -147,3 +162,36 @@ class MinIORetinalDataset(Dataset):
             return image, label_tensor
 
         return image, label
+
+    def stream_batches(self, batch_size=16, target_size=(224, 224), shuffle=True, normalize=False):
+        """
+        Yields batches of (images_np, labels_np) directly streamed from MinIO without local files.
+        images_np: shape (batch_size, H, W, 3) float32
+        labels_np: shape (batch_size,) int64
+        """
+        import numpy as np
+        import random
+
+        indices = list(range(len(self.samples)))
+        if shuffle:
+            random.shuffle(indices)
+
+        for i in range(0, len(indices), batch_size):
+            batch_idx = indices[i:i + batch_size]
+            batch_imgs = []
+            batch_labels = []
+
+            for idx in batch_idx:
+                obj_name, label = self.samples[idx]
+                raw_bytes = self.load_image_bytes(obj_name)
+                pil_img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
+                if target_size:
+                    pil_img = pil_img.resize(target_size, Image.Resampling.BILINEAR)
+                arr = np.array(pil_img, dtype=np.float32)
+                if normalize:
+                    arr /= 255.0
+                batch_imgs.append(arr)
+                batch_labels.append(label)
+
+            yield np.stack(batch_imgs, axis=0), np.array(batch_labels, dtype=np.int64)
+

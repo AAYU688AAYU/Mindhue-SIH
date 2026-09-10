@@ -77,3 +77,15 @@ class RetinalAIPipelineTests(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['parameters']['annual_target'], 120000)
+
+    def test_minio_dataset_indexing(self):
+        from api.ai_engine.minio_dataset import MinIORetinalDataset
+        dataset = MinIORetinalDataset(bucket="mindhue", prefix="archive/")
+        self.assertEqual(len(dataset), 2750)
+        distribution = dataset.get_class_distribution()
+        self.assertEqual(distribution['Grade 0: Normal / Healthy'], 1000)
+        self.assertEqual(distribution['Grade 1: Mild Non-Proliferative DR'], 370)
+        self.assertEqual(distribution['Grade 2: Moderate Non-Proliferative DR'], 900)
+        self.assertEqual(distribution['Grade 3: Severe Non-Proliferative DR'], 190)
+        self.assertEqual(distribution['Grade 4: Proliferative Diabetic Retinopathy'], 290)
+
