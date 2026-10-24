@@ -6,13 +6,9 @@ import {
   Lock, 
   Mail, 
   Phone, 
-  MapPin, 
   CheckCircle2, 
   AlertTriangle,
-  ArrowRight,
-  Sparkles,
-  KeyRound,
-  ShieldAlert
+  KeyRound
 } from 'lucide-react';
 
 export default function HospitalAuthModal({ 

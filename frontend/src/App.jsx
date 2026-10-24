@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-
-// 7 Unified Primary Clinical Modules
-import DashboardView from './components/dashboard/DashboardView';
-import NewAnalysisView from './components/analysis/NewAnalysisView';
-import PatientReportsView from './components/reports/PatientReportsView';
-import AIAgentWorkstationView from './components/agent/AIAgentWorkstationView';
-import FindSpecialistView from './components/specialist/FindSpecialistView';
-import AIAssistantView from './components/assistant/AIAssistantView';
-import AboutView from './components/about/AboutView';
-
-// Modals
-import PatientRegistrationModal from './components/modals/PatientRegistrationModal';
-import ImageUploadModal from './components/modals/ImageUploadModal';
-import ClinicalReportModal from './components/modals/ClinicalReportModal';
-import HospitalAuthModal from './components/auth/HospitalAuthModal';
-
+import ErrorBoundary from './components/common/ErrorBoundary';
+import ClinicalLoadingSkeleton from './components/common/ClinicalLoadingSkeleton';
 import { apiClient } from './api/client';
+
+// 7 Unified Primary Clinical Modules - Dynamic Code-Split Lazy Imports
+const DashboardView = lazy(() => import('./components/dashboard/DashboardView'));
+const NewAnalysisView = lazy(() => import('./components/analysis/NewAnalysisView'));
+const PatientReportsView = lazy(() => import('./components/reports/PatientReportsView'));
+const AIAgentWorkstationView = lazy(() => import('./components/agent/AIAgentWorkstationView'));
+const FindSpecialistView = lazy(() => import('./components/specialist/FindSpecialistView'));
+const AIAssistantView = lazy(() => import('./components/assistant/AIAssistantView'));
+const AboutView = lazy(() => import('./components/about/AboutView'));
+
+// Modals - Code-Split Lazy Imports
+const ClinicalReportModal = lazy(() => import('./components/modals/ClinicalReportModal'));
+const HospitalAuthModal = lazy(() => import('./components/auth/HospitalAuthModal'));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,34 +26,28 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [activeSessionDetail, setActiveSessionDetail] = useState(null);
   const [analyticsStats, setAnalyticsStats] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Hospital Authentication State
   const [hospital, setHospital] = useState(null);
-  const [authToken, setAuthToken] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Modals state
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [uploadSessionId, setUploadSessionId] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportSession, setReportSession] = useState(null);
 
   // Load initial data and verify hospital session
   const loadInitialData = async () => {
-    setIsLoading(true);
     try {
       const savedToken = localStorage.getItem('mindhue_token');
       const savedHosp = localStorage.getItem('mindhue_hospital');
 
       if (savedToken && savedHosp) {
-        setAuthToken(savedToken);
         try {
           setHospital(JSON.parse(savedHosp));
         } catch (e) {
-          console.error(e);
+          console.error('Error parsing stored hospital profile:', e);
         }
       } else {
         // Fetch default active hospital account
@@ -73,21 +66,21 @@ export default function App() {
         apiClient.getAnalyticsOverview()
       ]);
 
-      setCenters(centersData);
-      if (centersData.length > 0) {
+      setCenters(centersData || []);
+      if (centersData && centersData.length > 0) {
         setSelectedCenter(centersData[0]);
       }
 
-      setScreenings(screeningsData);
-      if (screeningsData.length > 0) {
+      setScreenings(screeningsData || []);
+      if (screeningsData && screeningsData.length > 0) {
         setActiveSessionId(screeningsData[0].id);
       }
 
-      setAnalyticsStats(statsData);
+      setAnalyticsStats(statsData || null);
     } catch (err) {
-      console.error('Error loading initial data:', err);
+      console.error('Error loading initial clinical telemetry:', err);
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -100,14 +93,13 @@ export default function App() {
     if (activeSessionId) {
       apiClient.getScreeningDetail(activeSessionId)
         .then(data => setActiveSessionDetail(data))
-        .catch(err => console.error(err));
+        .catch(err => console.error('Failed to load session details:', err));
     }
   }, [activeSessionId]);
 
   // Handlers for Hospital Auth
   const handleLoginSuccess = (hospData, token) => {
     setHospital(hospData);
-    setAuthToken(token);
     localStorage.setItem('mindhue_token', token);
     localStorage.setItem('mindhue_hospital', JSON.stringify(hospData));
     loadInitialData();
@@ -115,7 +107,6 @@ export default function App() {
 
   const handleLogoutHospital = () => {
     setHospital(null);
-    setAuthToken(null);
     localStorage.removeItem('mindhue_token');
     localStorage.removeItem('mindhue_hospital');
   };
@@ -126,18 +117,13 @@ export default function App() {
     setActiveTab('ai-agent');
   };
 
-  const handleOpenUploadModal = (sessionId) => {
-    setUploadSessionId(sessionId);
-    setIsUploadModalOpen(true);
-  };
-
   const handleViewReport = async (sessionId) => {
     try {
       const detail = await apiClient.getScreeningDetail(sessionId);
       setReportSession(detail);
       setIsReportModalOpen(true);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to view clinical report:', err);
     }
   };
 
@@ -146,7 +132,7 @@ export default function App() {
       // Clean district center ID (avoid empty string which can fail validation)
       const centerId = patientData.district_center || selectedCenter?.id || centers?.[0]?.id || null;
 
-      // Generate guaranteed collision-free MRN
+      // Generate collision-free MRN
       const uniqueSuffix = `${Date.now().toString().slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
       const mrn = patientData.mrn && !patientData.mrn.match(/^MRN-2026-\d{3}$/)
         ? patientData.mrn
@@ -171,25 +157,8 @@ export default function App() {
       setScreenings(updatedScreenings);
       return newSession;
     } catch (err) {
-      console.error('Error creating patient:', err);
+      console.error('Error creating patient intake session:', err);
       throw err;
-    }
-  };
-
-
-  const handleUploadSuccess = async () => {
-    const [updatedScreenings, updatedStats] = await Promise.all([
-      apiClient.getScreenings(),
-      apiClient.getAnalyticsOverview()
-    ]);
-    setScreenings(updatedScreenings);
-    setAnalyticsStats(updatedStats);
-
-    if (uploadSessionId) {
-      const detail = await apiClient.getScreeningDetail(uploadSessionId);
-      setActiveSessionDetail(detail);
-      setActiveSessionId(uploadSessionId);
-      setActiveTab('ai-agent');
     }
   };
 
@@ -211,7 +180,7 @@ export default function App() {
       await apiClient.seedBenchmark();
       await loadInitialData();
     } catch (err) {
-      console.error('Error seeding benchmark:', err);
+      console.error('Error seeding benchmark dataset:', err);
     } finally {
       setIsSeeding(false);
     }
@@ -222,6 +191,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-[#005eb8] selection:text-white">
       
+      {/* Top subtle clinical synchronization progress bar */}
+      {isInitialLoading && (
+        <div className="h-1 w-full bg-blue-100 overflow-hidden fixed top-0 left-0 z-50">
+          <div className="h-full bg-[#005eb8] animate-pulse w-full origin-left" />
+        </div>
+      )}
+
       {/* Official WHO Header */}
       <Header
         centers={centers}
@@ -247,103 +223,98 @@ export default function App() {
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
         />
 
-        {/* Tab Content Area */}
+        {/* Tab Content Area Protected by ErrorBoundary & Suspense */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto max-h-[calc(100vh-95px)] bg-slate-50">
-          
-          {/* 1. DASHBOARD */}
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              stats={analyticsStats}
-              screenings={screenings}
-              hospital={hospital}
-              onNavigate={setActiveTab}
-              onSelectSession={handleSelectSession}
-              onOpenReport={handleViewReport}
-            />
-          )}
+          <ErrorBoundary>
+            <Suspense fallback={<ClinicalLoadingSkeleton />}>
+              
+              {/* 1. DASHBOARD */}
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  stats={analyticsStats}
+                  screenings={screenings}
+                  hospital={hospital}
+                  onNavigate={setActiveTab}
+                  onSelectSession={handleSelectSession}
+                  onOpenReport={handleViewReport}
+                />
+              )}
 
-          {/* 2. NEW ANALYSIS */}
-          {activeTab === 'new-analysis' && (
-            <NewAnalysisView
-              centers={centers}
-              selectedCenter={selectedCenter}
-              hospital={hospital}
-              onSubmitNewPatient={handleCreatePatient}
-              onAnalysisComplete={(sessionId) => {
-                if (sessionId) setActiveSessionId(sessionId);
-                setActiveTab('ai-agent');
-              }}
-            />
-          )}
+              {/* 2. NEW ANALYSIS */}
+              {activeTab === 'new-analysis' && (
+                <NewAnalysisView
+                  centers={centers}
+                  selectedCenter={selectedCenter}
+                  hospital={hospital}
+                  onSubmitNewPatient={handleCreatePatient}
+                  onAnalysisComplete={(sessionId) => {
+                    if (sessionId) setActiveSessionId(sessionId);
+                    setActiveTab('ai-agent');
+                  }}
+                />
+              )}
 
-          {/* 3. PATIENT REPORTS */}
-          {activeTab === 'patient-reports' && (
-            <PatientReportsView
-              screenings={screenings}
-              onSelectSession={handleSelectSession}
-              onViewReport={handleViewReport}
-            />
-          )}
+              {/* 3. PATIENT REPORTS */}
+              {activeTab === 'patient-reports' && (
+                <PatientReportsView
+                  screenings={screenings}
+                  onSelectSession={handleSelectSession}
+                  onViewReport={handleViewReport}
+                />
+              )}
 
-          {/* 4. AI ANALYSIS AGENT */}
-          {activeTab === 'ai-agent' && (
-            <AIAgentWorkstationView
-              session={activeSessionDetail || screenings[0]}
-              onBack={() => setActiveTab('dashboard')}
-              onValidate={handleValidateSession}
-              onViewReport={handleViewReport}
-              onRunSimulation={apiClient.runSimulation}
-            />
-          )}
+              {/* 4. AI ANALYSIS AGENT */}
+              {activeTab === 'ai-agent' && (
+                <AIAgentWorkstationView
+                  session={activeSessionDetail || screenings[0]}
+                  onBack={() => setActiveTab('dashboard')}
+                  onValidate={handleValidateSession}
+                  onViewReport={handleViewReport}
+                  onRunSimulation={apiClient.runSimulation}
+                />
+              )}
 
-          {/* 5. FIND SPECIALIZATION */}
-          {activeTab === 'find-specialist' && (
-            <FindSpecialistView
-              hospital={hospital}
-            />
-          )}
+              {/* 5. FIND SPECIALIZATION */}
+              {activeTab === 'find-specialist' && (
+                <FindSpecialistView
+                  hospital={hospital}
+                />
+              )}
 
-          {/* 6. AI ASSISTANT */}
-          {activeTab === 'ai-assistant' && (
-            <AIAssistantView />
-          )}
+              {/* 6. AI ASSISTANT */}
+              {activeTab === 'ai-assistant' && (
+                <AIAssistantView />
+              )}
 
-          {/* 7. ABOUT */}
-          {activeTab === 'about' && (
-            <AboutView />
-          )}
+              {/* 7. ABOUT */}
+              {activeTab === 'about' && (
+                <AboutView />
+              )}
 
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
       </div>
 
-      {/* Modals */}
-      <HospitalAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
+      {/* Code-Split Modals */}
+      <Suspense fallback={null}>
+        {isAuthModalOpen && (
+          <HospitalAuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        )}
 
-      <PatientRegistrationModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-        onSubmit={handleCreatePatient}
-        centers={centers}
-        defaultCenterId={selectedCenter?.id}
-      />
-
-      <ImageUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        sessionId={uploadSessionId}
-        onUploadSuccess={handleUploadSuccess}
-      />
-
-      <ClinicalReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        session={reportSession}
-      />
+        {isReportModalOpen && (
+          <ClinicalReportModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            session={reportSession}
+          />
+        )}
+      </Suspense>
 
     </div>
   );

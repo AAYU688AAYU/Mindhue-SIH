@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Bot, 
   Send, 
-  Sparkles, 
-  BookOpen, 
-  HelpCircle, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Eye, 
   User, 
-  Clock,
-  Lightbulb,
-  ShieldCheck
+  Lightbulb
 } from 'lucide-react';
 
 export default function AIAssistantView() {
+  const messageSeqRef = useRef(1);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -37,7 +30,8 @@ export default function AIAssistantView() {
   const handleSend = (textToSend = inputText) => {
     if (!textToSend.trim()) return;
 
-    const userMsg = { id: Date.now(), sender: 'user', text: textToSend };
+    messageSeqRef.current += 1;
+    const userMsg = { id: messageSeqRef.current, sender: 'user', text: textToSend };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsTyping(true);
@@ -90,7 +84,8 @@ CSME is present if **ANY** of the following is true:
         aiResponseText = `Based on WHO Global Eye Health standards: Retinal microvascular changes in diabetes require early detection before irreversible visual acuity loss. MindHue automatically flags microaneurysms, hard exudates, and 4-quadrant hemorrhages to support clinical decision-making. Would you like detailed guidance on a specific ICDR grade, medication, or referral workflow?`;
       }
 
-      setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: aiResponseText }]);
+      messageSeqRef.current += 1;
+      setMessages(prev => [...prev, { id: messageSeqRef.current, sender: 'ai', text: aiResponseText }]);
       setIsTyping(false);
     }, 800);
   };

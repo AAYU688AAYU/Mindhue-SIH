@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   Users, 
-  Eye, 
   AlertTriangle, 
   ShieldCheck, 
   Activity, 
@@ -13,10 +12,6 @@ import {
   Stethoscope, 
   Bot, 
   Clock, 
-  Building2, 
-  CheckCircle2, 
-  Globe2,
-  Calendar,
   AlertOctagon
 } from 'lucide-react';
 import { 
@@ -26,9 +21,7 @@ import {
   YAxis, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell, 
-  LineChart, 
-  Line 
+  Cell
 } from 'recharts';
 
 export default function DashboardView({
@@ -322,15 +315,24 @@ export default function DashboardView({
                       </span>
                     </td>
                     <td className="py-3 pr-3 text-right">
-                      <button
-                        onClick={() => {
-                          onSelectSession(session.id);
-                          onNavigate('ai-agent');
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-[#005eb8] hover:bg-[#003087] text-white text-[11px] font-bold transition-colors cursor-pointer"
-                      >
-                        Fast Review
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => onOpenReport(session.id)}
+                          className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer"
+                          title="View Official Bilingual Clinical Report"
+                        >
+                          Report
+                        </button>
+                        <button
+                          onClick={() => {
+                            onSelectSession(session.id);
+                            onNavigate('ai-agent');
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#005eb8] hover:bg-[#003087] text-white text-[11px] font-bold transition-colors cursor-pointer"
+                        >
+                          Review
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

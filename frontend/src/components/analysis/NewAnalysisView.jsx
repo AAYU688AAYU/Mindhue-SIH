@@ -7,20 +7,15 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Eye, 
-  RefreshCw, 
-  ShieldCheck, 
-  FileText,
-  Building2,
   ArrowRight,
-  Sliders,
-  HelpCircle
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function NewAnalysisView({
   centers,
   selectedCenter,
-  hospital,
+  hospital: _hospital,
   onSubmitNewPatient,
   onAnalysisComplete
 }) {
@@ -58,10 +53,10 @@ export default function NewAnalysisView({
 
   useEffect(() => {
     const centerId = selectedCenter?.id || centers?.[0]?.id;
-    if (centerId && !patientData.district_center) {
-      setPatientData(prev => ({ ...prev, district_center: centerId }));
+    if (centerId) {
+      setPatientData(prev => (prev.district_center ? prev : { ...prev, district_center: centerId }));
     }
-  }, [selectedCenter, centers]);
+  }, [selectedCenter?.id, centers]);
 
   const handlePatientSubmit = async (e) => {
     e.preventDefault();

@@ -8,8 +8,7 @@ import {
   Bot, 
   Info,
   ShieldCheck, 
-  Lock,
-  Building2
+  Lock
 } from 'lucide-react';
 
 export default function Sidebar({ 

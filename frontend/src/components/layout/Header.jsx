@@ -1,20 +1,14 @@
 import React from 'react';
 import { 
   Eye, 
-  Activity, 
   ShieldCheck, 
   Wifi, 
   Cpu, 
-  Database, 
   RefreshCw, 
-  FileText,
-  AlertTriangle,
-  Building2,
-  CheckCircle2,
-  Globe2,
   Lock,
-  UserCheck,
   LogOut,
+  Building2,
+  Globe2,
   KeyRound
 } from 'lucide-react';
 
@@ -126,14 +120,23 @@ export default function Header({
           
           {/* Hospital Account Badge */}
           {hospital ? (
-            <button
-              onClick={onOpenAuthModal}
-              className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#005eb8] border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-              title="Hospital security details"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#005eb8]" />
-              <span className="font-mono">{hospital.hospital_id}</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onOpenAuthModal}
+                className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#005eb8] border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                title="Hospital security details"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#005eb8]" />
+                <span className="font-mono">{hospital.hospital_id}</span>
+              </button>
+              <button
+                onClick={onLogoutHospital}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors cursor-pointer border border-slate-200"
+                title="Log out hospital node"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={onOpenAuthModal}

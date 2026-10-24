@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Stethoscope, 
   Search, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Calendar, 
   Clock, 
   CheckCircle2, 
   ShieldCheck, 
-  Award, 
-  ExternalLink,
-  Building2,
-  Video,
-  Send,
-  AlertTriangle
+  Building2, 
+  Video, 
+  Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -144,6 +136,12 @@ export default function FindSpecialistView({ hospital }) {
           <p className="text-sm text-slate-600 mt-0.5">
             Connect Primary Health Centres with tertiary vitreoretinal surgeons, DME laser specialists, and emergency anti-VEGF centers.
           </p>
+        </div>
+        <div className="bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
+          <span className="text-[10px] font-bold text-slate-500 uppercase block">Referring Institutional Node</span>
+          <span className="text-xs font-extrabold text-[#005eb8] font-mono">
+            {hospital?.hospital_name || hospital?.hospital_id || 'Apex Tele-Retina Hub'}
+          </span>
         </div>
       </div>
 

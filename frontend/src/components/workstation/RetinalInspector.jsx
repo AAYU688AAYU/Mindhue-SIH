@@ -1,18 +1,6 @@
 import React, { useState } from 'react';
 import { getMediaUrl } from '../../api/client';
-import { 
-  Layers, 
-  Eye, 
-  ZoomIn, 
-  ZoomOut, 
-  Maximize2, 
-  Target, 
-  Crosshair, 
-  Grid, 
-  Info,
-  ChevronRight,
-  Sparkles
-} from 'lucide-react';
+import { Eye, Grid, Crosshair, Sparkles } from 'lucide-react';
 
 export default function RetinalInspector({ session }) {
   const [selectedEye, setSelectedEye] = useState('OD');
@@ -23,7 +11,6 @@ export default function RetinalInspector({ session }) {
   const images = session?.images || [];
   const currentImage = images.find(img => img.eye === selectedEye) || images[0];
   const ai = currentImage?.ai_analysis;
-  const patient = session?.patient || {};
 
   const mediaUrl = (url) => getMediaUrl(url);
 

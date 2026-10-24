@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { 
   X, 
   Upload, 
-  Eye, 
-  CheckCircle2, 
   AlertTriangle, 
   RefreshCw, 
   Sparkles 

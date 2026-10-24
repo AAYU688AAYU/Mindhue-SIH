@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   Tooltip, 
@@ -13,18 +11,8 @@ import {
 import { 
   Sliders, 
   Play, 
-  Cpu, 
-  Wifi, 
-  Users, 
-  Clock, 
-  DollarSign, 
-  ShieldAlert, 
   CheckCircle2,
-  Sparkles,
-  TrendingUp,
-  RefreshCw,
-  Zap,
-  Activity
+  Sparkles
 } from 'lucide-react';
 
 export default function SimulinkSimulatorView({ onRunSimulation }) {
@@ -41,21 +29,30 @@ export default function SimulinkSimulatorView({ onRunSimulation }) {
   const [simResults, setSimResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const executeSimulation = async (customParams = params) => {
+  const executeSimulation = useCallback(async (customParams = params) => {
     setIsRunning(true);
     try {
       const results = await onRunSimulation(customParams);
       setSimResults(results);
     } catch (err) {
-      console.error(err);
+      console.error('Simulation error:', err);
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [onRunSimulation, params]);
 
   useEffect(() => {
-    executeSimulation();
-  }, []);
+    let isMounted = true;
+    if (onRunSimulation) {
+      onRunSimulation(params)
+        .then(res => {
+          if (isMounted) setSimResults(res);
+        })
+        .catch(err => console.error('Initial simulation error:', err));
+    }
+    return () => { isMounted = false; };
+  }, [onRunSimulation, params]);
+
 
   const handleParamChange = (key, value) => {
     const updated = { ...params, [key]: value };

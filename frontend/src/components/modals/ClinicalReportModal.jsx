@@ -3,16 +3,9 @@ import { getMediaUrl } from '../../api/client';
 import { 
   X, 
   Printer, 
-  Download, 
-  Eye, 
   ShieldCheck, 
   FileText, 
-  QrCode, 
-  Building2,
-  Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  Globe2
+  QrCode
 } from 'lucide-react';
 
 export default function ClinicalReportModal({ 
@@ -129,7 +122,9 @@ export default function ClinicalReportModal({
             </div>
             <div>
               <span className="text-slate-500 block text-[10px] font-bold uppercase">Screening Date:</span>
-              <span className="text-slate-800 font-bold">{new Date(session.created_at || Date.now()).toLocaleDateString('en-GB')}</span>
+              <span className="text-slate-800 font-bold">
+                {session.created_at ? new Date(session.created_at).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}
+              </span>
             </div>
           </div>
 

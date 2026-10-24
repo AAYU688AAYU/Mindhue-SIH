@@ -236,6 +236,9 @@ class ClinicalDRClassifier:
             "model_architecture": "Multi-Task Dual-Head" if self.is_multitask else "EfficientNetV2 Single-Head"
         }
 
+# Backward compatibility alias
+DRModelInference = ClinicalDRClassifier
+
 
 if __name__ == "__main__":
     import argparse

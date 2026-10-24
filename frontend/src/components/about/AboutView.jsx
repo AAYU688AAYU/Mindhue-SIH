@@ -3,15 +3,8 @@ import {
   Globe2, 
   ShieldCheck, 
   Award, 
-  Database, 
-  Cpu, 
   CheckCircle2, 
-  Building2, 
-  HeartHandshake, 
-  ExternalLink,
-  Layers,
-  Sparkles,
-  Zap
+  Layers
 } from 'lucide-react';
 
 export default function AboutView() {

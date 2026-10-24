@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  FileText, 
   Search, 
   Printer, 
   Eye, 
-  Download, 
   CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  Filter, 
-  QrCode, 
-  Building2,
-  Calendar,
-  ShieldCheck,
-  AlertOctagon
+  Clock
 } from 'lucide-react';
 
 export default function PatientReportsView({

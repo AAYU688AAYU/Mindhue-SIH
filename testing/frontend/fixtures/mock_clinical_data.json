@@ -1,0 +1,75 @@
+{
+  "hospital_node": {
+    "id": 1,
+    "name": "AIIMS Tele-Retina Hub",
+    "hospital_id": "HOSP-AIIMS-DEL",
+    "district": "Central Delhi",
+    "state": "Delhi",
+    "nodal_officer": "Dr. V. Rajan, MD",
+    "contact_email": "tele-retina@aiims.edu"
+  },
+  "district_centers": [
+    {
+      "id": 1,
+      "center_code": "PHC-NAJ-01",
+      "name": "Najafgarh Rural Community Health Centre",
+      "district": "South West Delhi",
+      "state": "Delhi",
+      "operator_name": "Sister Anita Verma",
+      "camera_model": "Remidio Non-Mydriatic Fundus-on-Phone (FOP)",
+      "telemetry_ip": "10.0.12.44",
+      "bandwidth_kbps": 1540
+    }
+  ],
+  "patients": [
+    {
+      "id": 1,
+      "mrn": "MRN-2026-001",
+      "abha_id": "91-4829-1029-4821",
+      "first_name": "Ramesh",
+      "last_name": "Kumar",
+      "age": 58,
+      "gender": "M",
+      "diabetes_type": "TYPE2",
+      "diabetes_duration_years": 8.5,
+      "hba1c_level": 8.8,
+      "systolic_bp": 142,
+      "diastolic_bp": 90,
+      "visual_acuity_od": "6/9",
+      "visual_acuity_os": "6/18"
+    }
+  ],
+  "screening_sessions": [
+    {
+      "id": 1,
+      "session_code": "SESS-2026-001",
+      "status": "VALIDATED",
+      "urgency": "ROUTINE",
+      "doctor_notes": "Mild NPDR detected in OD. Normal in OS. Controlled HbA1c recommended.",
+      "doctor_confirmed_grade": 1,
+      "images": [
+        {
+          "id": 101,
+          "eye": "OD",
+          "image": "/media/fundus/OD_sample.jpg",
+          "ai_analysis": {
+            "icdr_grade": 1,
+            "icdr_label": "Mild Non-Proliferative Diabetic Retinopathy",
+            "confidence": 0.941,
+            "is_referable": false,
+            "iqa_score": 93.4,
+            "iqa_quality": "GRADEABLE",
+            "biomarkers": {
+              "microaneurysms": 3,
+              "hard_exudates": 0,
+              "hemorrhages": 0,
+              "cotton_wool_spots": 0,
+              "irma_detected": false,
+              "neovascularization": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

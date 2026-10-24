@@ -2,11 +2,6 @@ import React, { useState } from 'react';
 import { 
   X, 
   UserPlus, 
-  HeartPulse, 
-  Activity, 
-  Eye, 
-  CheckCircle2, 
-  Building2,
   AlertTriangle 
 } from 'lucide-react';
 
@@ -44,7 +39,7 @@ export default function PatientRegistrationModal({
     if (centerId && !formData.district_center) {
       setFormData(prev => ({ ...prev, district_center: centerId }));
     }
-  }, [defaultCenterId, centers]);
+  }, [defaultCenterId, centers, formData.district_center]);
 
   if (!isOpen) return null;
 

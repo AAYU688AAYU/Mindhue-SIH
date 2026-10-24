@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getMediaUrl } from '../../api/client';
 import { 
   Eye, 
@@ -10,16 +10,8 @@ import {
   ZoomIn, 
   ZoomOut, 
   Maximize2, 
-  FileText, 
-  Send, 
   ArrowLeft,
-  Info,
-  ChevronRight,
-  Activity,
-  AlertOctagon,
   Sparkles,
-  Sliders,
-  Share2,
   Printer
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -77,8 +69,11 @@ export default function FastReviewStudio({
     return () => clearInterval(interval);
   }, [isTimerRunning]);
 
+  const lastLoadedImageId = useRef(null);
+
   useEffect(() => {
-    if (ai) {
+    if (ai && currentImage?.id && currentImage.id !== lastLoadedImageId.current) {
+      lastLoadedImageId.current = currentImage.id;
       setConfirmedGrade(ai.icdr_grade);
       if (ai.icdr_grade === 0) {
         setClinicalNotes('Normal retinal vasculature and clear macula. Follow annual routine screening.');
@@ -97,7 +92,7 @@ export default function FastReviewStudio({
         setTreatmentPlan('Immediate vitreoretinal surgical / laser intervention within 48-72 hours.');
       }
     }
-  }, [ai]);
+  }, [ai, currentImage?.id]);
 
   const toggleOverlay = (key) => {
     setActiveOverlays(prev => ({ ...prev, [key]: !prev[key] }));
@@ -485,9 +480,13 @@ export default function FastReviewStudio({
                   Ophthalmologist Clinical Sign-Off
                 </h3>
               </div>
-              <span className="text-xs text-slate-600 font-mono font-semibold">
-                {doctorName}
-              </span>
+              <input
+                type="text"
+                value={doctorName}
+                onChange={(e) => setDoctorName(e.target.value)}
+                className="text-xs text-slate-700 font-semibold bg-slate-100 px-2 py-1 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#005eb8]"
+                title="Reviewing Ophthalmologist Name"
+              />
             </div>
 
             {/* ICDR Grade Confirmation Radio Buttons */}

@@ -3,12 +3,7 @@ import {
   Sparkles, 
   Zap, 
   Layers, 
-  Database, 
-  Sliders, 
-  Eye, 
-  CheckCircle2, 
-  Activity, 
-  Cpu 
+  Sliders
 } from 'lucide-react';
 import FastReviewStudio from '../workstation/FastReviewStudio';
 import RetinalInspector from '../workstation/RetinalInspector';
