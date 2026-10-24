@@ -4,7 +4,11 @@ set -o errexit
 
 echo "📦 Installing Python dependencies..."
 pip install --upgrade pip
+pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
+
+echo "📁 Ensuring static and media directories exist..."
+mkdir -p staticfiles media
 
 echo "🎨 Collecting static files for WhiteNoise..."
 python manage.py collectstatic --no-input

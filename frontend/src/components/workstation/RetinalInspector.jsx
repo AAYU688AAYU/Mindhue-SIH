@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getMediaUrl } from '../../api/client';
 import { 
   Layers, 
   Eye, 
@@ -24,14 +25,7 @@ export default function RetinalInspector({ session }) {
   const ai = currentImage?.ai_analysis;
   const patient = session?.patient || {};
 
-  const mediaUrl = (url) => {
-    if (!url) return null;
-    try {
-      return new URL(url, window.location.origin).pathname;
-    } catch {
-      return url;
-    }
-  };
+  const mediaUrl = (url) => getMediaUrl(url);
 
   return (
     <div className="space-y-6">

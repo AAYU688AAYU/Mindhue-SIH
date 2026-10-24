@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getMediaUrl } from '../../api/client';
 import { 
   Eye, 
   Clock, 
@@ -64,14 +65,7 @@ export default function FastReviewStudio({
   const ai = currentImage?.ai_analysis;
   const patient = session?.patient || {};
 
-  const mediaUrl = (url) => {
-    if (!url) return null;
-    try {
-      return new URL(url, window.location.origin).pathname;
-    } catch {
-      return url;
-    }
-  };
+  const mediaUrl = (url) => getMediaUrl(url);
 
   useEffect(() => {
     let interval = null;

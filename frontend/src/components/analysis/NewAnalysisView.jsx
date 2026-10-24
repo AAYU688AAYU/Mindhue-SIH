@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   UserPlus, 
   Upload, 
@@ -56,12 +56,20 @@ export default function NewAnalysisView({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  useEffect(() => {
+    const centerId = selectedCenter?.id || centers?.[0]?.id;
+    if (centerId && !patientData.district_center) {
+      setPatientData(prev => ({ ...prev, district_center: centerId }));
+    }
+  }, [selectedCenter, centers]);
+
   const handlePatientSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
     setErrorMsg(null);
     try {
-      const mrn = `MRN-2026-${Math.floor(100 + Math.random() * 900)}`;
+      const uniqueSuffix = `${Date.now().toString().slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+      const mrn = `MRN-2026-${uniqueSuffix}`;
       const result = await onSubmitNewPatient({
         ...patientData,
         mrn
@@ -74,6 +82,7 @@ export default function NewAnalysisView({
       setIsProcessing(false);
     }
   };
+
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -246,7 +255,33 @@ export default function NewAnalysisView({
                   className="w-full bg-slate-50 text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#005eb8]"
                 />
               </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Primary Health Centre</label>
+                <select
+                  value={patientData.district_center}
+                  onChange={(e) => setPatientData({ ...patientData, district_center: e.target.value })}
+                  className="w-full bg-slate-50 text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#005eb8]"
+                >
+                  <option value="">-- Select Center (Optional) --</option>
+                  {centers?.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.district})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Village / Town / City</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sector 4, Rural Block"
+                  value={patientData.village_or_city}
+                  onChange={(e) => setPatientData({ ...patientData, village_or_city: e.target.value })}
+                  className="w-full bg-slate-50 text-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#005eb8]"
+                />
+              </div>
             </div>
+
 
             {/* Diabetic History */}
             <div className="pt-3 border-t border-slate-200 space-y-3">

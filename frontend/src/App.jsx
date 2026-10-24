@@ -143,14 +143,27 @@ export default function App() {
 
   const handleCreatePatient = async (patientData) => {
     try {
+      // Clean district center ID (avoid empty string which can fail validation)
+      const centerId = patientData.district_center || selectedCenter?.id || centers?.[0]?.id || null;
+
+      // Generate guaranteed collision-free MRN
+      const uniqueSuffix = `${Date.now().toString().slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+      const mrn = patientData.mrn && !patientData.mrn.match(/^MRN-2026-\d{3}$/)
+        ? patientData.mrn
+        : `MRN-2026-${uniqueSuffix}`;
+
       const newPatient = await apiClient.createPatient({
         ...patientData,
+        mrn,
+        district_center: centerId,
         hospital_account: hospital?.id || null
       });
+
+      const sessionCode = `SESS-${newPatient.mrn}`;
       const newSession = await apiClient.createScreeningSession({
         patient: newPatient.id,
-        session_code: `SESS-${newPatient.mrn}`,
-        district_center: newPatient.district_center,
+        session_code: sessionCode,
+        district_center: newPatient.district_center || centerId,
         hospital_account: hospital?.id || null
       });
 
@@ -162,6 +175,7 @@ export default function App() {
       throw err;
     }
   };
+
 
   const handleUploadSuccess = async () => {
     const [updatedScreenings, updatedStats] = await Promise.all([

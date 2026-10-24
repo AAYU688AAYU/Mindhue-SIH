@@ -82,6 +82,11 @@ class MinIORetinalDataset(Dataset):
     def _determine_label(self, object_name):
         """Extracts numerical ICDR label (0-4) from object path."""
         path_lower = object_name.lower()
+        # First check path segments for direct numerical folder names '0', '1', '2', '3', '4'
+        parts = path_lower.replace('\\', '/').split('/')
+        for part in parts[:-1]:  # check directory segments only
+            if part in ('0', '1', '2', '3', '4'):
+                return int(part)
         # Sort keys by length descending to match 'grade_0' before '0'
         for keyword in sorted(self.CLASS_KEYWORD_MAP.keys(), key=len, reverse=True):
             if keyword in path_lower:

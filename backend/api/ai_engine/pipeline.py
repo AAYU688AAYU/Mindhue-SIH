@@ -12,6 +12,8 @@ from .segmentation import extract_optic_disc_and_cup, extract_fovea_and_macula, 
 from .lesion_detector import detect_retinal_lesions
 from .icdr_classifier import classify_icdr_severity
 from .gradcam import generate_gradcam_heatmap
+from .left_right import detect_eye_laterality
+from .anatomical_detection import assess_fundus_landmarks
 
 def np_to_content_file(img_rgb, format='JPEG', quality=92):
     """Converts a numpy RGB array to Django ContentFile for model ImageField storage."""
@@ -23,14 +25,16 @@ def np_to_content_file(img_rgb, format='JPEG', quality=92):
 def analyze_retinal_image(image_path_or_np):
     """
     Executes the full end-to-end clinical AI pipeline on a retinal fundus image:
-    1. Image Quality Assessment (IQA) & Recapture check
-    2. Adaptive Homogenization & CLAHE Enhancement
-    3. Optic Disc & Cup-to-Disc Ratio (CDR) localization
-    4. Macula & Foveal Avascular Zone (FAZ) mapping
-    5. Vessel Tree Segmentation & Density Calculation
-    6. Sub-pixel Microaneurysm & Lesion Extraction
-    7. Calibrated ICDR 5-Grade & Referable DR Classification
-    8. Explainable Grad-CAM Attention Heatmap Synthesis
+    1. Automatic Eye Laterality Detection (Right Eye OD vs Left Eye OS)
+    2. Anatomical Landmarks Gatekeeper (Optic Disc, Macula, Vessels presence)
+    3. Image Quality Assessment (IQA) & Recapture check
+    4. Adaptive Homogenization & CLAHE Enhancement
+    5. Optic Disc & Cup-to-Disc Ratio (CDR) localization
+    6. Macula & Foveal Avascular Zone (FAZ) mapping
+    7. Vessel Tree Segmentation & Density Calculation
+    8. Sub-pixel Microaneurysm & Lesion Extraction
+    9. Calibrated ICDR 5-Grade & Referable DR Classification
+    10. Explainable Grad-CAM Attention Heatmap Synthesis
     """
     # Load image if file path is passed
     if isinstance(image_path_or_np, str):
@@ -41,22 +45,28 @@ def analyze_retinal_image(image_path_or_np):
     else:
         image_np = image_path_or_np
 
-    # Step 1: Image Quality Assessment
+    # --- Step 1: Auto-Detect Eye Laterality (OD vs OS) ---
+    laterality_info = detect_eye_laterality(image_np)
+
+    # --- Step 2: Verify Anatomical Landmarks Presence ---
+    landmarks_info = assess_fundus_landmarks(image_np)
+
+    # --- Step 3: Core Image Quality Assessment (IQA) ---
     quality_info = assess_image_quality(image_np)
 
-    # Step 2: Adaptive Enhancement
+    # --- Step 4: Adaptive Clinical Enhancement (Illumination + CLAHE + Denoising) ---
     enhanced_np = enhance_fundus_image(image_np)
 
-    # Step 3: Anatomical Localization (Optic Disc & Cup)
+    # --- Step 5: Anatomical Localization (Optic Disc & Cup) ---
     od_info = extract_optic_disc_and_cup(enhanced_np)
 
-    # Step 4: Macula & Fovea Extraction
+    # --- Step 6: Macula & Fovea Extraction ---
     fovea_info = extract_fovea_and_macula(enhanced_np, od_info)
 
-    # Step 5: Vessel Segmentation
+    # --- Step 7: Vessel Segmentation ---
     vessel_info = segment_retinal_vessels(enhanced_np)
 
-    # Step 6: Lesion Detection & Biomarker Counting
+    # --- Step 8: Lesion Detection & Biomarker Counting ---
     lesion_info = detect_retinal_lesions(
         enhanced_np,
         vessel_info['mask'],
@@ -64,10 +74,10 @@ def analyze_retinal_image(image_path_or_np):
         fovea_info
     )
 
-    # Step 7: ICDR Severity Grading & Triage Gatekeeper
-    classification_info = classify_icdr_severity(lesion_info, quality_info)
+    # --- Step 9: ICDR Severity Grading & Triage Gatekeeper ---
+    classification_info = classify_icdr_severity(lesion_info, quality_info, image_input=image_np)
 
-    # Step 8: Grad-CAM Explainability Heatmap
+    # --- Step 10: Grad-CAM Explainability Heatmap ---
     gradcam_info = generate_gradcam_heatmap(
         enhanced_np,
         lesion_info,
@@ -75,6 +85,8 @@ def analyze_retinal_image(image_path_or_np):
     )
 
     return {
+        'laterality': laterality_info,
+        'landmarks': landmarks_info,
         'quality': quality_info,
         'enhanced_image_np': enhanced_np,
         'optic_disc': od_info,
@@ -84,6 +96,8 @@ def analyze_retinal_image(image_path_or_np):
         'classification': classification_info,
         'gradcam': gradcam_info,
     }
+
+
 
 
 def run_retinal_pipeline(retinal_image_model, ground_truth_grade=None):
@@ -105,14 +119,26 @@ def run_retinal_pipeline(retinal_image_model, ground_truth_grade=None):
         pil_img = Image.open(io.BytesIO(raw_bytes)).convert('RGB')
         results = analyze_retinal_image(np.array(pil_img))
 
-    # Update RetinalImage quality metrics
+    # Update RetinalImage laterality and quality metrics
+    lat = results.get('laterality', {})
+    if lat.get('eye_code') in ['OD', 'OS']:
+        retinal_image_model.eye = lat['eye_code']
+
     q = results['quality']
+    lm = results.get('landmarks', {})
     retinal_image_model.iqa_focus_score = q['focus_score']
     retinal_image_model.iqa_illumination_score = q['illumination_score']
     retinal_image_model.iqa_fov_score = q['fov_score']
     retinal_image_model.iqa_overall_score = q['overall_score']
-    retinal_image_model.quality_grade = q['quality_grade']
-    retinal_image_model.recapture_feedback_text = q['feedback']
+
+    if lm.get('decision') == 'REJECT':
+        retinal_image_model.quality_grade = 'UNGRADEABLE'
+        retinal_image_model.recapture_feedback_text = (
+            f"Gatekeeper Alert: {lm.get('reason')} {q.get('feedback', '')}"
+        ).strip()
+    else:
+        retinal_image_model.quality_grade = q['quality_grade']
+        retinal_image_model.recapture_feedback_text = q['feedback']
 
     # Save enhanced image
     enhanced_file = np_to_content_file(results['enhanced_image_np'], format='JPEG')
@@ -175,9 +201,14 @@ def run_retinal_pipeline(retinal_image_model, ground_truth_grade=None):
     ai_obj.hard_exudates_count = l['hard_exudates_count']
     ai_obj.hemorrhages_count = l['hemorrhages_count']
     ai_obj.cotton_wool_spots_count = l['cotton_wool_spots_count']
-    ai_obj.neovascularization_detected = l['neovascularization_detected']
-    ai_obj.quadrant_4_2_1_rule_met = l['quadrant_4_2_1_met']
-    ai_obj.clinical_explanation = c['clinical_explanation']
+    laterality_prefix = f"[{lat.get('laterality', 'Eye Laterality Unspecified')} - Conf: {lat.get('confidence', 0.85):.0%}]"
+    landmarks_details = lm.get('details', {})
+    od_mark = '✓' if landmarks_details.get('optic_disc') else '✗'
+    mac_mark = '✓' if landmarks_details.get('macula') else '✗'
+    ves_mark = '✓' if landmarks_details.get('vessels') else '✗'
+    landmarks_prefix = f"Landmarks: OD({od_mark}) Macula({mac_mark}) Vessels({ves_mark}, {landmarks_details.get('vessel_density_pct', 0)}%)."
+    ai_obj.clinical_explanation = f"{laterality_prefix} {landmarks_prefix} {c['clinical_explanation']}"
+
 
     # Save artifact images
     gradcam_file = np_to_content_file(g['gradcam_image'], format='JPEG')

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getMediaUrl } from '../../api/client';
 import { 
   X, 
   Printer, 
@@ -27,14 +28,7 @@ export default function ClinicalReportModal({
   const ai = primaryImg?.ai_analysis;
   const validation = ai?.validation;
 
-  const mediaUrl = (url) => {
-    if (!url) return null;
-    try {
-      return new URL(url, window.location.origin).pathname;
-    } catch {
-      return url;
-    }
-  };
+  const mediaUrl = (url) => getMediaUrl(url);
 
   const handlePrint = () => {
     window.print();

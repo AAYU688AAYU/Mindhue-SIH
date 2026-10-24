@@ -1,5 +1,25 @@
-const API_URL_ORIGIN = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
-const API_BASE_URL = `${API_URL_ORIGIN}/api`;
+export const API_URL_ORIGIN = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+export const API_BASE_URL = `${API_URL_ORIGIN}/api`;
+
+export const getMediaUrl = (url) => {
+  if (!url) return null;
+  if (typeof url !== 'string') return url;
+
+  // If already absolute URL starting with http:// or https://
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (API_URL_ORIGIN && (url.includes('127.0.0.1:8000') || url.includes('localhost:8000'))) {
+      return url.replace(/^https?:\/\/(127\.0\.0\.1|localhost):8000/, API_URL_ORIGIN);
+    }
+    return url;
+  }
+
+  // If relative path like /media/... or media/...
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  if (API_URL_ORIGIN) {
+    return `${API_URL_ORIGIN}${cleanPath}`;
+  }
+  return cleanPath;
+};
 
 export const apiClient = {
   // Hospital Authentication
@@ -58,8 +78,14 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patientData)
     });
-    if (!res.ok) throw new Error('Failed to create patient');
-    return await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errMsg = typeof data === 'object' && Object.keys(data).length > 0
+        ? Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ')
+        : 'Failed to create patient';
+      throw new Error(errMsg);
+    }
+    return data;
   },
 
   // Screening Sessions
@@ -82,9 +108,16 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sessionData)
     });
-    if (!res.ok) throw new Error('Failed to create screening session');
-    return await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errMsg = typeof data === 'object' && Object.keys(data).length > 0
+        ? Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ')
+        : 'Failed to create screening session';
+      throw new Error(errMsg);
+    }
+    return data;
   },
+
 
   async uploadRetinalImage(sessionId, formData) {
     const res = await fetch(`${API_BASE_URL}/screenings/${sessionId}/upload_image/`, {

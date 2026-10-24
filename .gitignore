@@ -30,5 +30,10 @@ yarn-error.log*
 *.log
 
 # Runtime-generated Django assets
-backend/media/
+backend/media/*
+!backend/media/models/
+backend/media/models/*
+!backend/media/models/mindhue_efficientnet_v2_clinical_best.pth
+!backend/media/models/mindhue_multitask_clinical_best.pth
+!backend/media/models/*.json
 backend/staticfiles/

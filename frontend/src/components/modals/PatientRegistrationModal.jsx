@@ -6,8 +6,10 @@ import {
   Activity, 
   Eye, 
   CheckCircle2, 
-  Building2 
+  Building2,
+  AlertTriangle 
 } from 'lucide-react';
+
 
 export default function PatientRegistrationModal({ 
   isOpen, 
@@ -35,18 +37,27 @@ export default function PatientRegistrationModal({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  React.useEffect(() => {
+    const centerId = defaultCenterId || centers?.[0]?.id;
+    if (centerId && !formData.district_center) {
+      setFormData(prev => ({ ...prev, district_center: centerId }));
+    }
+  }, [defaultCenterId, centers]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMsg(null);
     try {
-      const mrn = `MRN-2026-${Math.floor(100 + Math.random() * 900)}`;
-      await onSubmit({ ...formData, mrn });
+      await onSubmit(formData);
       onClose();
     } catch (err) {
       console.error(err);
+      setErrorMsg(err.message || 'Failed to create patient. Please check the details and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -58,6 +69,7 @@ export default function PatientRegistrationModal({
         
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50">
+
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-100 text-[#005eb8]">
               <UserPlus className="w-5 h-5" />
@@ -82,8 +94,15 @@ export default function PatientRegistrationModal({
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
           {/* Section 1: Demographics */}
+
           <div className="space-y-3">
             <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider text-[#005eb8]">
               1. Patient Demographics & Identification

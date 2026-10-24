@@ -77,6 +77,10 @@ class MinIOFundusDataLoader:
 
     def _determine_label(self, object_name):
         path_lower = object_name.lower()
+        parts = path_lower.replace('\\', '/').split('/')
+        for part in parts[:-1]:
+            if part in ('0', '1', '2', '3', '4'):
+                return int(part)
         for keyword in sorted(CLASS_KEYWORD_MAP.keys(), key=len, reverse=True):
             if keyword in path_lower:
                 return CLASS_KEYWORD_MAP[keyword]
